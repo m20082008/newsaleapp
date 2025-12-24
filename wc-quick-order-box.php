@@ -45,6 +45,12 @@ function qof_sellers() {
     ];
 }
 
+function qof_is_optional_customer_fields($user_code, $seller_name = ''){
+    $map   = qof_sellers();
+    $name  = $seller_name !== '' ? $seller_name : ( $map[$user_code] ?? '' );
+    return trim($name) === 'هاجر رستمی';
+}
+
 function qof_product_label($product){
     if ( ! $product ) return '';
     if ( $product->is_type('variation') ) {
@@ -224,12 +230,18 @@ add_shortcode('quick_order_box', function($atts){
       #qof-form .btn{cursor:pointer;border-radius:10px}
       #qof-form .btn-primary{border:1px solid #2563eb;background:#2563eb;color:#fff}
       #qof-form .btn-add{border:1px solid #10b981;background:#bbf7d0;color:#065f46;font-weight:600}
+      #qof-form .btn-inc{border:1px solid #ef4444;background:#fee2e2;color:#991b1b}
+      #qof-form .btn-dec{border:1px solid #10b981;background:#d1fae5;color:#065f46}
       #qof-form .btn-hold{border:1px solid #f59e0b;background:#fffbeb;color:#92400e;font-weight:700}
       #qof-form .addr-box{width:100%;min-height:96px;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px}
       #qof-form .helper{color:#6b7280;font-size:12px;margin-top:6px}
       #qof-form .stock-badge{font-size:13px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:6px 10px;color:#1e40af}
       #qof-form .stock-badge.zero{background:#fee2e2;border-color:#fecaca;color:#991b1b}
       #qof-form .muted{opacity:.6;pointer-events:none}
+      #qof-form .touch-row{gap:10px}
+      #qof-form .touch-row .btn{min-width:44px;min-height:44px}
+      #qof-form .qof-row-inc{border:1px solid #ef4444;background:#fee2e2;color:#991b1b}
+      #qof-form .qof-row-dec{border:1px solid #10b981;background:#d1fae5;color:#065f46}
       .select2-container .select2-results > .select2-results__options{max-height: 70vh !important;overscroll-behavior: contain;}
       .select2-dropdown{max-height: 75vh !important;overflow: auto !important;}
       .select2-search--dropdown .select2-search__field{padding:8px; font-size:14px; line-height:1.4;}
@@ -239,8 +251,13 @@ add_shortcode('quick_order_box', function($atts){
       @media (max-width: 768px){
         #qof-form .w-id{width:100%}
         #qof-form .w-name{width:100%}
-        #qof-form .qty-input{width:88px;font-size:16px}
+        #qof-form .qty-input{width:100%;font-size:16px;max-width:140px}
         #qof-form .btn-primary,#qof-form .btn-add{width:100%}
+        #qof-form .row-flex{flex-direction:column;align-items:flex-start}
+        #qof-form .touch-row{width:100%}
+        #qof-form .touch-row .btn{flex:1 1 33%;width:100%}
+        #qof-form .qty-wrap{width:100%}
+        #qof-form .qty-wrap input{width:100%}
         #qof-form thead { display:none; }
         #qof-form tbody tr{display:flex; flex-wrap:wrap; gap:8px; padding:10px;}
         #qof-form tbody td{border:none; padding:0;}
@@ -273,22 +290,22 @@ add_shortcode('quick_order_box', function($atts){
             <span id="qof-stock-badge" class="stock-badge">موجودی: — | قابل افزودن: —</span>
         </div>
 
-        <div class="row-flex">
+        <div class="row-flex qty-wrap touch-row">
           <span>تعداد:</span>
-          <button type="button" id="qof-btn-dec" style="font-size:22px;padding:6px 12px" class="btn">➖</button>
-          <input type="number" id="qof-qty" value="1" min="0" class="qty-input">
-          <button type="button" id="qof-btn-inc" style="font-size:22px;padding:6px 12px" class="btn">➕</button>
-          <button type="button" id="qof-btn-add" style="margin-inline-start:12px;padding:10px 16px" class="btn btn-add muted" disabled>➕ اضافه کردن</button>
+          <button type="button" id="qof-btn-dec" style="font-size:22px;padding:10px 14px" class="btn btn-dec">➖</button>
+          <input type="number" id="qof-qty" value="1" min="0" class="qty-input" aria-label="تعداد">
+          <button type="button" id="qof-btn-inc" style="font-size:22px;padding:10px 14px" class="btn btn-inc">➕</button>
+          <button type="button" id="qof-btn-add" style="margin-inline-start:12px;padding:12px 16px" class="btn btn-add muted" disabled>➕ اضافه کردن</button>
         </div>
 
         <div class="row-flex" style="width:100%">
           <div style="flex:1; min-width:240px">
-            <label for="qof-cust-name" style="display:block;margin-bottom:6px">نام و نام‌خانوادگی مشتری (اختیاری):</label>
-            <input type="text" id="qof-cust-name" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px" placeholder="مثال: محسن رضایی">
+            <label for="qof-cust-name" style="display:block;margin-bottom:6px" id="qof-label-name">نام و نام‌خانوادگی مشتری (الزامی):</label>
+            <input type="text" id="qof-cust-name" style="width:100%;padding:12px;border:1px solid #d1d5db;border-radius:10px" placeholder="مثال: محسن رضایی" autocomplete="name">
           </div>
           <div style="flex:1; min-width:220px">
-            <label for="qof-cust-phone" style="display:block;margin-bottom:6px">شماره موبایل (اختیاری):</label>
-            <input type="tel" id="qof-cust-phone" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px" placeholder="۰۹۱۱۱۱۱۱۱۱۱">
+            <label for="qof-cust-phone" style="display:block;margin-bottom:6px" id="qof-label-phone">شماره موبایل (الزامی):</label>
+            <input type="tel" id="qof-cust-phone" style="width:100%;padding:12px;border:1px solid #d1d5db;border-radius:10px" placeholder="۰۹۱۱۱۱۱۱۱۱" inputmode="tel" autocomplete="tel">
           </div>
           <div style="flex:1; min-width:220px">
             <label for="qof-seller" style="display:block;margin-bottom:6px">فروشنده:</label>
@@ -326,9 +343,9 @@ add_shortcode('quick_order_box', function($atts){
         </div>
 
         <div>
-          <label for="qof-address" style="display:block;margin-bottom:6px">آدرس سفارش (اختیاری):</label>
-          <textarea id="qof-address" class="addr-box" placeholder="اختیاری"></textarea>
-          <div class="helper">برای فعال شدن «ثبت نهایی»، فقط کافی است حداقل یک آیتم اضافه شده باشد.</div>
+          <label for="qof-address" style="display:block;margin-bottom:6px" id="qof-label-address">آدرس سفارش (الزامی):</label>
+          <textarea id="qof-address" class="addr-box" placeholder="مثال: استان، شهر، خیابان، پلاک"></textarea>
+          <div class="helper" id="qof-helper-required">برای فعال شدن «ثبت نهایی»، حداقل یک آیتم اضافه و اطلاعات تماس تکمیل شود.</div>
         </div>
 
         <?php wp_nonce_field('qof_place_order_form','_wpnonce_qof'); ?>
@@ -356,9 +373,20 @@ add_shortcode('quick_order_box', function($atts){
         const sellerMap = <?php echo wp_json_encode( qof_sellers(), JSON_UNESCAPED_UNICODE ); ?>;
         const sellerName = sellerMap[userCode] || "";
         $('#qof-seller').val(sellerName);
+        const isOptionalCustomer = (sellerName === 'هاجر رستمی');
 
         const isTehranpars = (sellerName === 'شعبه تهرانپارس' || userCode === '914');
         if (isTehranpars) $('#qof-delivery-wrap').show(); else $('#qof-delivery-wrap').hide();
+
+        function applyRequirementLabels(){
+            const suffix = isOptionalCustomer ? ' (اختیاری برای هاجر رستمی)' : ' (الزامی)';
+            $('#qof-label-name').text('نام و نام‌خانوادگی مشتری' + suffix);
+            $('#qof-label-phone').text('شماره موبایل' + suffix);
+            $('#qof-label-address').text('آدرس سفارش' + suffix);
+            $('#qof-address').attr('placeholder', isOptionalCustomer ? 'اختیاری (هاجر رستمی)' : 'مثال: استان، شهر، خیابان، پلاک');
+            $('#qof-helper-required').text(isOptionalCustomer ? 'برای هاجر رستمی، پر کردن آدرس و نام و موبایل اختیاری است.' : 'برای سایر فروشنده‌ها، نام، موبایل و آدرس الزامی است.');
+        }
+        applyRequirementLabels();
 
         $('input[name="qof_delivery"]').on('change', function(){
             if (!isTehranpars) return;
@@ -634,11 +662,21 @@ add_shortcode('quick_order_box', function($atts){
             renderTable();
         });
 
+        function isContactValid(){
+            if (isOptionalCustomer) return true;
+            const name  = ($('#qof-cust-name').val()||'').trim();
+            const phone = ($('#qof-cust-phone').val()||'').trim();
+            const addr  = ($('#qof-address').val()||'').trim();
+            const digits = phone.replace(/\\D+/g,'');
+            return name !== '' && addr !== '' && digits.length >= 8;
+        }
+
         function checkReady(){
             const hasItems = items.length > 0;
             const hasZeroQty = items.some(it => (parseInt(it && it.qty, 10) || 0) === 0);
-            $('#qof-btn-save').prop('disabled', !hasItems || hasZeroQty);
-            $('#qof-btn-hold').prop('disabled', !hasItems);
+            const contactOk = isContactValid();
+            $('#qof-btn-save').prop('disabled', !hasItems || hasZeroQty || !contactOk);
+            $('#qof-btn-hold').prop('disabled', !hasItems || !contactOk);
         }
 
         $('#qof-address,#qof-cust-name,#qof-cust-phone').on('input', checkReady);
@@ -651,6 +689,10 @@ add_shortcode('quick_order_box', function($atts){
         $('#qof-form').on('submit', function(e){
             e.preventDefault();
             if (submitting) return false;
+            if (!isContactValid()){
+                $('#qof-msg').removeClass('ok').addClass('err').text('لطفاً نام، موبایل و آدرس را تکمیل کنید.').show();
+                return false;
+            }
             if (items.length === 0){
                 $('#qof-msg').removeClass('ok').addClass('err').text('هیچ آیتمی انتخاب نشده.').show();
                 return false;
@@ -758,6 +800,14 @@ function qof_place_order_ajax(){
 
     $map    = qof_sellers();
     $seller = isset($map[$user_code]) ? $map[$user_code] : '';
+    $optional_fields = qof_is_optional_customer_fields($user_code, $seller);
+
+    if ( ! $optional_fields ) {
+        $digits = preg_replace('/\\D+/', '', $cust_phone);
+        if ( $cust_name === '' || $cust_phone === '' || $address === '' || strlen($digits) < 8 ) {
+            wp_send_json_error(['err'=>'نام، موبایل و آدرس اجباری است.']);
+        }
+    }
 
     $user = wp_get_current_user();
     $uid  = (int) ($user->ID ?? 0);
@@ -924,6 +974,7 @@ add_shortcode('qof_orders', function($atts){
 
     $seller_code = $url_code !== '' ? $url_code : (string)$atts['code'];
     $seller_code = trim($seller_code);
+    $optional_fields = qof_is_optional_customer_fields($seller_code, qof_sellers()[$seller_code] ?? '');
 
     if ($seller_code === '') {
         return '<div style="color:#b91c1c">کد فروشنده مشخص نشده است.</div>';
@@ -1042,16 +1093,22 @@ add_shortcode('qof_orders', function($atts){
       .qof-edit-box table{width:100%;border-collapse:collapse}
       .qof-edit-box th,.qof-edit-box td{padding:6px;border-bottom:1px solid #f3f4f6;vertical-align:middle}
       .qof-edit-box th{text-align:right;background:#f9fafb}
+      .qof-edit-contact{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;align-items:flex-start;margin-bottom:10px}
+      .qof-edit-contact textarea{min-height:90px}
+      .qof-edit-qty-wrap{display:flex;align-items:center;justify-content:center;gap:6px}
+      .qof-edit-inc{border:1px solid #ef4444;background:#fee2e2;color:#991b1b}
+      .qof-edit-dec{border:1px solid #10b981;background:#d1fae5;color:#065f46}
       .qof-edit-row-muted{opacity:.6}
       .qof-btn.qof-btn-final{border:1px solid #2563eb;background:#2563eb;color:#fff}
       .qof-btn.qof-btn-hold{border:1px solid #f59e0b;background:#fffbeb;color:#92400e;font-weight:700}
       @media (max-width: 768px){
         .qof-table th,.qof-table td{font-size:13px}
         .qof-details{font-size:13px}
+        .qof-edit-contact{grid-template-columns:1fr}
       }
     </style>
 
-    <div class="qof-orders-wrap" data-nonce="<?php echo esc_attr($nonce); ?>" data-edit-nonce="<?php echo esc_attr($edit_nonce); ?>" data-seller="<?php echo esc_attr($seller_code); ?>">
+    <div class="qof-orders-wrap" data-nonce="<?php echo esc_attr($nonce); ?>" data-edit-nonce="<?php echo esc_attr($edit_nonce); ?>" data-seller="<?php echo esc_attr($seller_code); ?>" data-optional="<?php echo esc_attr($optional_fields ? '1' : '0'); ?>">
       <div style="margin:8px 0 12px">
         <span class="qof-badge">کد فروشنده: <strong><?php echo esc_html($seller_code); ?></strong></span>
         <span class="qof-muted" style="margin-inline-start:10px">نمایش عمومی سفارش‌های ثبت‌شده با همین کد</span>
@@ -1110,6 +1167,7 @@ add_shortcode('qof_orders', function($atts){
       const nonce = wrap.getAttribute('data-nonce');
       const editNonce = wrap.getAttribute('data-edit-nonce');
       const seller = wrap.getAttribute('data-seller');
+      const optionalFields = wrap.getAttribute('data-optional') === '1';
       const ajaxUrl = '<?php echo esc_js(admin_url("admin-ajax.php")); ?>';
       const allProducts = <?php echo wp_json_encode($edit_all_products); ?>;
       const editSelectHtmlById = <?php echo wp_json_encode($edit_id_select_html); ?>;
@@ -1163,6 +1221,15 @@ add_shortcode('qof_orders', function($atts){
         if (canEdit) html += '<button type="button" class="qof-btn qof-btn-secondary qof-edit-order" data-oid="'+escapeHtml(data.order_id||'')+'">ویرایش سفارش</button>';
         html += '</div>';
 
+        const contactSuffix = optionalFields ? ' (اختیاری برای هاجر رستمی)' : ' (الزامی)';
+        const contactDisabled = canEdit ? '' : 'disabled';
+        html += '<div class="qof-edit-contact" data-oid="'+escapeHtml(data.order_id||'')+'">';
+        html += '<div><label style="display:block;margin-bottom:4px">نام و نام‌خانوادگی'+contactSuffix+'</label><input type="text" class="qof-input qof-edit-name" value="'+escapeHtml(data.cust_name||'')+'" '+contactDisabled+'></div>';
+        html += '<div><label style="display:block;margin-bottom:4px">شماره موبایل'+contactSuffix+'</label><input type="tel" class="qof-input qof-edit-phone" value="'+escapeHtml(data.cust_phone||'')+'" '+contactDisabled+'></div>';
+        html += '<div style="grid-column:1/-1"><label style="display:block;margin-bottom:4px">آدرس'+contactSuffix+'</label><textarea class="qof-input qof-edit-address" '+contactDisabled+'>'+escapeHtml(data.address||'')+'</textarea></div>';
+        if (!canEdit) html += '<div class="qof-muted" style="grid-column:1/-1">ویرایش اطلاعات تماس فقط در وضعیت «در انتظار بررسی» امکان‌پذیر است.</div>';
+        html += '</div>';
+
         html += '<div style="margin:4px 0 8px; font-weight:600">اقلام سفارش</div>';
         html += '<div style="overflow:auto"><table style="width:100%;border-collapse:collapse">';
         html += '<thead><tr><th style="text-align:center;border-bottom:1px solid #e5e7eb;padding:6px;width:40px">#</th><th style="text-align:right;border-bottom:1px solid #e5e7eb;padding:6px">محصول</th><th style="text-align:center;border-bottom:1px solid #e5e7eb;padding:6px;width:90px">تعداد</th><th style="text-align:center;border-bottom:1px solid #e5e7eb;padding:6px;width:120px">جمع جزء</th><th style="text-align:center;border-bottom:1px solid #e5e7eb;padding:6px;width:120px">مبلغ خط</th></tr></thead><tbody>';
@@ -1184,11 +1251,12 @@ add_shortcode('qof_orders', function($atts){
             const qty = (it && (it.qty || it.qty === 0)) ? String(it.qty) : '0';
             const rq = (it && (it.req_qty || it.req_qty === 0)) ? String(it.req_qty) : '0';
             const rqTxt = (parseInt(qty,10)===0 && parseInt(rq,10)>0) ? ('<div class="qof-muted" style="font-size:12px;margin-top:2px">تعداد درخواستی: '+escapeHtml(rq)+'</div>') : '';
+            const qtyLocked = (parseInt(qty,10)===0 && parseInt(rq,10)>0);
             html += '<tr class="qof-edit-row" data-pid="'+escapeHtml(pid)+'" data-orig="'+escapeHtml(qty)+'" data-deleted="0" data-req="'+escapeHtml(rq)+'">';
             html += '<td style="text-align:center">'+String(i+1)+'</td>';
             html += '<td>'+escapeHtml(it.name||'')+rqTxt+'</td>';
             html += '<td style="text-align:center"><span class="qof-edit-stock">'+escapeHtml(stock)+'</span></td>';
-            html += '<td style="text-align:center"><input type="number" min="0" class="qof-input qof-edit-qty" value="'+escapeHtml(qty)+'" style="width:100px;text-align:center" '+((parseInt(qty,10)===0 && parseInt(rq,10)>0)?'disabled':'')+'></td>';
+            html += '<td style="text-align:center"><div class="qof-edit-qty-wrap"><button type="button" class="qof-btn qof-edit-dec" '+(qtyLocked?'disabled':'')+'>−</button><input type="number" min="0" class="qof-input qof-edit-qty" value="'+escapeHtml(qty)+'" style="width:100px;text-align:center" '+(qtyLocked?'disabled':'')+'><button type="button" class="qof-btn qof-edit-inc" '+(qtyLocked?'disabled':'')+'>+</button></div></td>';
             html += '<td style="text-align:center"><button type="button" class="qof-btn qof-btn-secondary qof-edit-remove">حذف</button></td>';
             html += '</tr>';
           });
@@ -1407,6 +1475,36 @@ add_shortcode('qof_orders', function($atts){
           return;
         }
 
+        const decBtn = e.target.closest('.qof-edit-dec');
+        if (decBtn) {
+          const row = e.target.closest('.qof-edit-row');
+          const editBox = e.target.closest('.qof-edit-box');
+          const qtyEl = row ? row.querySelector('.qof-edit-qty') : null;
+          if (!row || !qtyEl || qtyEl.disabled) return;
+          const cur = parseIntSafe(qtyEl.value, 0);
+          const next = Math.max(0, cur - 1);
+          qtyEl.value = String(next);
+          qtyEl.dispatchEvent(new Event('input', {bubbles:true}));
+          if (editBox) updateEditStockBadge(editBox);
+          return;
+        }
+
+        const incBtn2 = e.target.closest('.qof-edit-inc');
+        if (incBtn2) {
+          const row = e.target.closest('.qof-edit-row');
+          const editBox = e.target.closest('.qof-edit-box');
+          const qtyEl = row ? row.querySelector('.qof-edit-qty') : null;
+          if (!row || !qtyEl || qtyEl.disabled) return;
+          const pid = row.getAttribute('data-pid') || '';
+          const av = availableStock(editBox, pid);
+          const cur = parseIntSafe(qtyEl.value, 0);
+          const next = Math.min(av, cur + 1);
+          qtyEl.value = String(next);
+          qtyEl.dispatchEvent(new Event('input', {bubbles:true}));
+          if (editBox) updateEditStockBadge(editBox);
+          return;
+        }
+
         const addBtn = e.target.closest('.qof-edit-add');
         if (addBtn) {
           const editBox = e.target.closest('.qof-edit-box');
@@ -1469,6 +1567,17 @@ add_shortcode('qof_orders', function($atts){
           const oldText = btn.textContent;
           btn.textContent = 'در حال ذخیره...';
 
+          const custName  = (editBox.querySelector('.qof-edit-name')  ? editBox.querySelector('.qof-edit-name').value : '').trim();
+          const custPhone = (editBox.querySelector('.qof-edit-phone') ? editBox.querySelector('.qof-edit-phone').value : '').trim();
+          const address   = (editBox.querySelector('.qof-edit-address')? editBox.querySelector('.qof-edit-address').value : '').trim();
+          const digits    = custPhone.replace(/\\D+/g,'');
+          if (!optionalFields && (custName === '' || address === '' || digits.length < 8)) {
+            showEditMsg(editBox, 'نام، موبایل و آدرس باید تکمیل شود.', false);
+            btn.disabled = false;
+            btn.textContent = oldText;
+            return true;
+          }
+
           const form = new FormData();
           form.append('action', 'qof_update_order_items');
           form.append('nonce',  editNonce);
@@ -1476,6 +1585,9 @@ add_shortcode('qof_orders', function($atts){
           form.append('order_id', oid);
           form.append('items', JSON.stringify(items));
           form.append('save_mode', mode);
+          form.append('cust_name', custName);
+          form.append('cust_phone', custPhone);
+          form.append('address', address);
 
           fetch(ajaxUrl, { method:'POST', credentials:'same-origin', body: form })
           .then(r => r.json())
@@ -1499,6 +1611,11 @@ add_shortcode('qof_orders', function($atts){
                   const tds = tr.querySelectorAll('td');
                   const totalTd = tds && tds.length ? tds[tds.length - 1] : null;
                   if (totalTd) totalTd.innerHTML = orderData.totals_html;
+                  if (tds.length >= 6) {
+                    if (tds[3]) tds[3].textContent = (orderData.cust_name || '—');
+                    if (tds[4]) tds[4].textContent = (orderData.cust_phone || '—');
+                    if (tds[5]) tds[5].textContent = (orderData.address || '—');
+                  }
                 }
               }
             } else {
@@ -1700,6 +1817,9 @@ function qof_build_order_details_payload($order){
         'items'        => $items_data,
         'has_zero_qty' => !empty($pending_ids),
         'totals_html'  => $order->get_formatted_order_total(),
+        'cust_name'    => trim($order->get_billing_first_name().' '.$order->get_billing_last_name()),
+        'cust_phone'   => (string) $order->get_billing_phone(),
+        'address'      => (string) $order->get_billing_address_1(),
     ];
 }
 
@@ -1799,6 +1919,9 @@ function qof_update_order_items(){
         $order_id = isset($_POST['order_id']) ? absint( $_POST['order_id'] ) : 0;
         $raw      = isset($_POST['items'])    ? wp_unslash($_POST['items']) : '[]';
         $items    = json_decode($raw, true);
+        $address  = isset($_POST['address'])   ? sanitize_textarea_field( wp_unslash($_POST['address']) ) : '';
+        $cust_name= isset($_POST['cust_name']) ? sanitize_text_field( wp_unslash($_POST['cust_name']) )   : '';
+        $cust_phone=isset($_POST['cust_phone'])? sanitize_text_field( wp_unslash($_POST['cust_phone']) )  : '';
 
         // ✅ تغییر ۵: حالت ذخیره
         $save_mode = isset($_POST['save_mode']) ? sanitize_text_field( wp_unslash($_POST['save_mode']) ) : 'hold';
@@ -1813,6 +1936,13 @@ function qof_update_order_items(){
         $meta_code = (string) $order->get_meta('_wc_qof_user_code', true);
         if ($meta_code === '' || $meta_code !== $seller){
             wp_send_json_error(['err'=>'دسترسی شما به این سفارش مجاز نیست.']);
+        }
+        $optional_fields = qof_is_optional_customer_fields($seller);
+        if ( ! $optional_fields ) {
+            $digits = preg_replace('/\\D+/', '', $cust_phone);
+            if ($cust_name === '' || $cust_phone === '' || $address === '' || strlen($digits) < 8) {
+                wp_send_json_error(['err'=>'نام، موبایل و آدرس اجباری است.']);
+            }
         }
 
         if ( (string) $order->get_status() !== 'on-hold' ) {
@@ -2022,6 +2152,24 @@ function qof_update_order_items(){
             } else {
                 // on-hold باقی بماند
             }
+
+            // به‌روزرسانی اطلاعات مشتری
+            $addr = [
+                'first_name' => $cust_name,
+                'last_name'  => '',
+                'address_1'  => $address,
+                'address_2'  => '',
+                'city'       => '',
+                'state'      => '',
+                'postcode'   => '',
+                'country'    => '',
+                'phone'      => $cust_phone,
+                'email'      => $order->get_billing_email(),
+            ];
+            $order->set_address($addr, 'billing');
+            $order->set_address($addr, 'shipping');
+            if ($cust_name)  $order->update_meta_data('_wc_qof_customer_fullname', $cust_name); else $order->delete_meta_data('_wc_qof_customer_fullname');
+            if ($cust_phone) $order->update_meta_data('_wc_qof_customer_phone', $cust_phone); else $order->delete_meta_data('_wc_qof_customer_phone');
 
             // note (بدون pending qty)
             $seller_map  = qof_sellers();
