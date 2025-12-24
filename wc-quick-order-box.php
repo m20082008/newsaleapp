@@ -368,31 +368,6 @@ add_shortcode('quick_order_box', function($atts){
         </div>
     </form>
 
-<?php
-    // ⛔️ ادامه JS + منطق pending/meta و AJAX در پارت 2 می‌آید
-    return ob_get_clean();
-});
-<?php
-/* =========================================================
- * PART 2/5
- * - JS کامل فرم سفارش (SelectWoo سرچ)
- * - قوانین اجباری بودن فیلدها (همه اجباری، فقط کد 910 اختیاری)
- * - pending (موجودی صفر) با req_qty + ذخیره subtotal pending سمت کلاینت
- * ========================================================= */
-
-add_shortcode('quick_order_box', function($atts){
-    qof_enqueue_front_assets();
-    if ( ! function_exists('wc_get_products') ) return '<div style="color:#b91c1c">WooCommerce فعال نیست.</div>';
-
-    $atts = shortcode_atts(['key' => ''], $atts, 'quick_order_box');
-
-    // === (همان بخش دیتاست پارت 1 را اینجا فرض کن که ساخته شده) ===
-    // برای اینکه این پارت مستقل نباشد، در فایل نهایی پارت1+2 بهم می‌چسبند.
-    // پس اینجا فقط ادامه‌ی خروجی HTML/JS بعد از </form> می‌آید.
-
-    ob_start(); ?>
-    <!-- ✅ ادامه از انتهای پارت 1: (دقیقاً بعد از </form>) -->
-
     <script>
     jQuery(function($){
         const allProducts = <?php echo wp_json_encode($all); ?>;
@@ -839,7 +814,7 @@ add_shortcode('quick_order_box', function($atts){
 <?php
     return ob_get_clean();
 });
-<?php
+
 /* =========================================================
  * PART 3/5
  * - AJAX ثبت سفارش (qof_place_order)
@@ -1091,7 +1066,6 @@ function qof_place_order_ajax(){
         wp_send_json_error(['err'=>'خطا در ایجاد سفارش: '.$e->getMessage()]);
     }
 }
-<?php
 /* =========================================================
  * PART 4/5
  * - Shortcode گزارش سفارش‌ها: [qof_orders]
@@ -2008,7 +1982,6 @@ add_shortcode('qof_orders', function($atts){
 <?php
     return ob_get_clean();
 });
-<?php
 /* =========================================================
  * PART 5/5 (آخر فایل)
  * - Metaهای اقلام ناموجود (برای ربات تلگرام)
